@@ -12,8 +12,32 @@ CO2, humidity, temperature and pressure sensor.
 | MH-Z19        | [mh-z19][]       | [mh-z19-esphome][]       | [mh-z19-fritzing][]       |
 | BME280        | [bme280][]       | [bme280-esphome][]       | [bme280-fritzing][]       |
 
+<img src="living-room.png" alt="Living Room" width="800"/>
+
+<img src="living-room-photo.jpg" alt="Living Room Photo" width="800"/>
+
+# Office
+
+CO2, humidity, temperature and pressure sensor.
+
+[ESPHome configuration][office-esphome]
+
+[Fritzing project][office-fritzing]
+
+| part          | shop             | esphome                  | fritzing                  |
+|---------------|------------------|--------------------------|---------------------------|
+| ESP32-DevKitC | [esp32-devkit][] | [esp32-devkit-esphome][] | [esp32-devkit-fritzing][] |
+| MH-Z19        | [mh-z19][]       | [mh-z19-esphome][]       | [mh-z19-fritzing][]       |
+| BME280        | [bme280][]       | [bme280-esphome][]       | [bme280-fritzing][]       |
+
+<img src="office.png" alt="Office" width="800"/>
+
+<img src="office-photo.jpg" alt="Office Photo" width="800"/>
+
 [living-room-esphome]:   living-room.yaml
 [living-room-fritzing]:  living-room.fzz
+[office-esphome]:        office.yaml
+[office-fritzing]:       office.fzz
 [esp32-devkit]:          https://www.aliexpress.com/item/4000296658456.html
 [esp32-devkit-esphome]:  https://esphome.io/devices/nodemcu_esp32.html
 [esp32-devkit-fritzing]: https://forum.fritzing.org/t/fritzing-part-of-an-esp32/5355/4
@@ -23,7 +47,3 @@ CO2, humidity, temperature and pressure sensor.
 [bme280]:                https://www.amazon.de/dp/B07FS95JXT/
 [bme280-esphome]:        https://esphome.io/components/sensor/bme280.html
 [bme280-fritzing]:       https://github.com/kurokky/fritzing
-
-
-<img src="living-room.png" alt="Living Room" width="800"/>
-<img src="living-room-photo.jpg" alt="Living Room" width="800"/>
