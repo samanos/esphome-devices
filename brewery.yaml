@@ -1,0 +1,88 @@
+esphome:
+  name: brewery
+  platform: ESP32
+  board: nodemcu-32s
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+web_server:
+  port: 80
+
+uart:
+  tx_pin: GPIO22
+  rx_pin: GPIO23
+  baud_rate: 9600
+
+i2c:
+  sda: GPIO18
+  scl: GPIO19
+  scan: true
+
+sensor:
+  - platform: mhz19
+    id: brewery_mhz19
+    co2:
+      id: brewery_co2
+      name: "Brewery CO2"
+    temperature:
+      name: "Brewery Temperatūra"
+    update_interval: 60s
+    automatic_baseline_calibration: false
+
+switch:
+  - platform: restart
+    name: "Brewery Restart"
+  - platform: template
+    name: "Brewery CO2 Baseline Calibration"
+    assumed_state: true
+    turn_on_action:
+      - mhz19.calibrate_zero: brewery_mhz19
+
+font:
+  - id: s
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 19
+  - id: m
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 28
+  - id: l
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 58
+
+graph:
+  - id: co2_graph
+    sensor: brewery_co2
+    duration: 1h
+    x_grid: 10min
+    y_grid: 1000
+    width: 128
+    height: 64
+
+display:
+  - id: brewery_display
+    platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3c
+    pages:
+      - id: page1
+        lambda: |-
+          it.print(0, 6, id(m), "CO2");
+          it.print(4, 36, id(s), "ppm");
+          it.printf(it.get_width(), 0, id(l), TextAlign::TOP_RIGHT, "%.0f", id(brewery_co2).state);
+      - id: page2
+        lambda: |-
+          it.graph(0, 0, id(co2_graph));
+
+interval:
+  - interval: 10s
+    then:
+      - display.page.show_next: brewery_display
+      - component.update: brewery_display
+
+logger:
+
+api:
+
+ota:
