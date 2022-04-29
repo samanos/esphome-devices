@@ -65,6 +65,8 @@ display:
     platform: ssd1306_i2c
     model: "SSD1306 128x64"
     address: 0x3c
+    flip_y: false
+    flip_x: false
     pages:
       - id: page1
         lambda: |-
