@@ -1,5 +1,8 @@
 exec target command:
-  docker run --rm -v $PWD:/config -it --device=/dev/ttyUSB0 esphome/esphome {{command}} {{target}}
+  docker run --rm -v $PWD:/config -it --privileged esphome/esphome {{command}} {{target}}
 
 update:
   docker pull esphome/esphome
+
+version:
+  docker run --rm -v $PWD:/config -it esphome/esphome version
