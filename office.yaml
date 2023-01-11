@@ -11,8 +11,8 @@ web_server:
   port: 80
 
 uart:
-  rx_pin: GPIO25
-  tx_pin: GPIO26
+  rx_pin: GPIO17
+  tx_pin: GPIO16
   baud_rate: 9600
 
 i2c:
@@ -29,15 +29,20 @@ sensor:
       name: "Office Temperature"
     update_interval: 60s
     automatic_baseline_calibration: false
-  - platform: bme280
+  - platform: bmp280
     temperature:
       name: "Office Temperature 2"
     pressure:
       name: "Office Pressure"
-    humidity:
-      name: "Office Humidity"
     address: 0x76
     update_interval: 60s
+  - platform: scd4x
+    co2:
+      name: "Office CO2 (SCD40)"
+    temperature:
+      name: "Office Temperature (SCD40)"
+    humidity:
+      name: "Office Humidity (SCD40)"
 
 switch:
   - platform: restart
