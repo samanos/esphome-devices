@@ -8,6 +8,4 @@
 **/src/
 **/platformio.ini
 /secrets.yaml
-living-room
-office
-basement-temperature
+.builds

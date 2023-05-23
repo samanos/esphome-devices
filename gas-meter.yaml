@@ -1,0 +1,107 @@
+substitutions:
+  devicename: "gas-meter"
+  friendly_name: "Gas meter"
+
+esphome:
+  name: $devicename
+  comment: $friendly_name
+  platform: ESP32
+  board: featheresp32
+  build_path: .builds/$devicename
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+logger:
+
+api:
+
+ota:
+
+globals:
+  - id: total_pulses
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: multiplier
+    type: int
+    restore_value: false
+    initial_value: '0'
+
+binary_sensor:
+  - platform: gpio
+    id: internal_pulse_counter
+    pin: GPIO27
+    internal: true
+    filters:
+      - delayed_on: 100ms
+    on_press:
+      then:
+        - lambda: id(total_pulses) += 1;
+        - component.update: my_display
+
+  - platform: gpio
+    pin:
+      number: GPIO0
+      inverted: true
+    internal: true
+    id: tdisplay_button_input_0
+    on_click:
+      then:
+        - lambda: id(multiplier) = (id(multiplier) + 1) % 7;
+  - platform: gpio
+    pin:
+      number: GPIO35
+      inverted: true
+    internal: true
+    id: tdisplay_button_input_1
+    on_click:
+      then:
+        - lambda: !lambda |-
+            if ((int)(id(total_pulses) / pow(10, id(multiplier))) % 10 < 9) {
+              id(total_pulses) += 1 * pow(10, id(multiplier));
+            } else {
+              id(total_pulses) -= 9 * pow(10, id(multiplier));
+            }
+        - component.update: my_display
+
+sensor:
+  - platform: template
+    id: gas_used
+    name: "Gas used"
+    device_class: gas
+    unit_of_measurement: "m³"
+    state_class: "total_increasing"
+    icon: "mdi:fire"
+    accuracy_decimals: 2
+    lambda: |-
+        return id(total_pulses) * 0.01;
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+
+font:
+  - id: s
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 19
+  - id: m
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 28
+  - id: l
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 58
+
+display:
+  - id: my_display
+    platform: st7789v
+    model: TTGO TDisplay 135x240
+    backlight_pin: GPIO4
+    cs_pin: GPIO5
+    dc_pin: GPIO16
+    reset_pin: GPIO23
+    rotation: 90°
+    update_interval: 5s
+    lambda: |-
+      it.printf(it.get_width(), 0, id(l), TextAlign::TOP_RIGHT, "%08.2f", id(total_pulses) * 0.01);
