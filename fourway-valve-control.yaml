@@ -1,0 +1,157 @@
+esphome:
+  name: fourway-valve-control
+  platform: ESP32
+  board: featheresp32
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+web_server:
+  port: 80
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+
+number:
+  - platform: template
+    id: fourway_valve_position
+    name: fourway_valve_position
+    initial_value: 0
+    min_value: 0
+    max_value: 100
+    step: 1
+    optimistic: true
+    set_action:
+      then:
+        - script.execute: move_servo_motor
+
+  - platform: template
+    id: test_servo_control
+    name: Test Servo Control
+    min_value: -100
+    initial_value: 0
+    max_value: 100
+    step: 1
+    optimistic: true
+    set_action:
+      then:
+        - servo.write:
+            id: valve_servo
+            level: !lambda 'return x / 100.0;'
+
+script:
+  - id: set_valve_position
+    then:
+      - number.set:
+          id: fourway_valve_position
+          value: !lambda |-
+            float valve_position = (id(control_temp).state - id(bottom_temp).state) / (id(top_temp).state - id(bottom_temp).state);
+            return round(max(0.0, min(100.0, valve_position * 100.0)));
+
+  - id: move_servo_motor
+    then:
+      - servo.write:
+          id: valve_servo
+          level: !lambda |-
+            return (id(fully_closed_at).state - (
+              (id(fourway_valve_position).state / 100.0) * (id(fully_closed_at).state - id(fully_open_at).state)
+            )) / -100.0;
+
+sensor:
+  - platform: homeassistant
+    entity_id: input_number.fourway_valve_bottom_temp
+    id: bottom_temp
+    on_value:
+      - script.execute: set_valve_position
+      - script.execute: move_servo_motor
+  - platform: homeassistant
+    entity_id: input_number.fourway_valve_top_temp
+    id: top_temp
+    on_value:
+      - script.execute: set_valve_position
+      - script.execute: move_servo_motor
+  - platform: homeassistant
+    entity_id: input_number.fourway_valve_control_temp
+    id: control_temp
+    on_value:
+      - script.execute: set_valve_position
+      - script.execute: move_servo_motor
+  - platform: homeassistant
+    entity_id: input_number.fourway_valve_fully_open_at
+    id: fully_open_at
+    on_value:
+      then:
+        script.execute: move_servo_motor
+  - platform: homeassistant
+    entity_id: input_number.fourway_valve_fully_closed_at
+    id: fully_closed_at
+    on_value:
+      then:
+        script.execute: move_servo_motor
+  - platform: wifi_signal
+    name: fourway_valve_wifi_signal
+    update_interval: 30s
+
+servo:
+  - id: valve_servo
+    output: pwm_output
+    auto_detach_time: 0s
+    transition_length: 5s
+    #min_level: 2.5%
+    #max_level: 12.5%
+    #min_level: 3.5%
+    #max_level: 11.5%
+    min_level: 4%
+    max_level: 100%
+
+output:
+  - platform: ledc
+    pin: GPIO2
+    id: pwm_output
+    frequency: 80Hz
+
+# small motor
+# range 700us - 2300us
+# frequency 60Hz
+# min_level: 2.5%
+
+# mid motor
+# range 500us - 2500us
+# frequency 80Hz / 12.500us
+# min_level 4%
+# max_level 20%
+
+font:
+  - id: s
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 19
+  - id: m
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 28
+  - id: l
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 58
+
+display:
+  - id: fourway_display
+    platform: st7789v
+    model: TTGO TDisplay 135x240
+    backlight_pin: GPIO4
+    cs_pin: GPIO5
+    dc_pin: GPIO16
+    reset_pin: GPIO23
+    rotation: 90°
+    update_interval: 5s
+    lambda: |-
+      it.print(0, 6, id(m), "Pos");
+      it.print(4, 36, id(s), "%");
+      it.printf(it.get_width(), 0, id(l), TextAlign::TOP_RIGHT, "%.0f", id(test_servo_control).state);
+
+logger:
+
+api:
+
+ota:
+  platform: esphome
