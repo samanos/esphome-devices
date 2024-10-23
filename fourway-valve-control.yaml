@@ -96,58 +96,81 @@ sensor:
 
 servo:
   - id: valve_servo
-    output: pwm_output
-    auto_detach_time: 0s
+    output: servo_pwm
+    auto_detach_time: 2s
     transition_length: 5s
-    #min_level: 2.5%
-    #max_level: 12.5%
-    #min_level: 3.5%
-    #max_level: 11.5%
-    min_level: 4%
-    max_level: 100%
+    min_level: 2.5%
+    idle_level: 7.5%
+    max_level: 12.5%
 
 output:
   - platform: ledc
-    pin: GPIO2
-    id: pwm_output
-    frequency: 80Hz
+    pin: GPIO27
+    id: servo_pwm
+    frequency: 50Hz
+    channel: 0 # https://github.com/esphome/issues/issues/3114
+  - platform: ledc
+    pin: GPIO4
+    id: backlight_pwm
+    channel: 2
 
-# small motor
+# small motor (continuos)
 # range 700us - 2300us
-# frequency 60Hz
-# min_level: 2.5%
+# pulse_width 1_000_000 / 50Hz = 20_000us
+# min_level: 700 / 20_000.0 * 100 = 3.5
+# max_level 2300 / 20_000.0 * 100 = 11.5
 
+# TD-8120MG
+# https://www.tinytronics.nl/product_files/002172_Data%20Sheet%20of%20TD-8120MG%20Digital%20Servo%20Motor.pdf
 # mid motor
-# range 500us - 2500us
-# frequency 80Hz / 12.500us
-# min_level 4%
-# max_level 20%
+# range 500us - 2500us, neutral 1500us
+# ---------------------------------------
+# pulse_width 1_000_000 / 50Hz = 20_000us
+# min_level 500 / 20_000.0 * 100 = 2.5
+# idle_level 1500 / 20_000.0 * 100 = 7.5
+# max_level 2500 / 20_000.0 * 100 = 12.5
+# ----------------------------------------
+# pulse_width 1_000_000 / 100Hz = 10_000us
+# min_level 500 / 10_000.0 * 100 = 5.0
+# idle_level 1500 / 10_000.0 * 100 = 15.0
+# max_level 2500 / 10_000.0 * 100 = 25.0
+# ----------------------------------------
+
+# servo tester
+# pulse_width 1_000_000 / 50Hz = 20_000us
+# min_level 4.5% = 900us
+# idle_level 7.5% = 1500us
+# max_level 10.5% = 2100us
 
 font:
-  - id: s
-    file: "fonts/BebasNeue-Regular.ttf"
-    size: 19
-  - id: m
-    file: "fonts/BebasNeue-Regular.ttf"
-    size: 28
   - id: l
     file: "fonts/BebasNeue-Regular.ttf"
-    size: 58
+    size: 80
 
 display:
   - id: fourway_display
-    platform: st7789v
-    model: TTGO TDisplay 135x240
-    backlight_pin: GPIO4
+    platform: ili9xxx
+    model: ST7789V
+    #TTGO TDisplay 135x240
+    dimensions:
+      height: 240
+      width: 135
+      offset_height: 40
+      offset_width: 52
     cs_pin: GPIO5
     dc_pin: GPIO16
     reset_pin: GPIO23
     rotation: 90°
-    update_interval: 5s
+    invert_colors: true
     lambda: |-
-      it.print(0, 6, id(m), "Pos");
-      it.print(4, 36, id(s), "%");
-      it.printf(it.get_width(), 0, id(l), TextAlign::TOP_RIGHT, "%.0f", id(test_servo_control).state);
+      it.printf(20, 20, id(l), "%.0f%%", id(fourway_valve_position).state);
+
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    name: "Display Backlight"
+    id: back_light
+    restore_mode: ALWAYS_ON
 
 logger:
 
