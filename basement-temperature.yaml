@@ -12,7 +12,7 @@ web_server:
 
 one_wire:
   - platform: gpio
-    pin: GPIO23
+    pin: GPIO27
 
 sensor:
   - platform: dallas_temp
@@ -40,6 +40,61 @@ sensor:
     name: Water to Gas Heater
     id: water_to_gas_heater
     update_interval: 30s
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO19
+
+output:
+  - platform: ledc
+    pin: GPIO4
+    id: backlight_pwm
+    channel: 2
+
+font:
+  - id: l
+    file: "fonts/BebasNeue-Regular.ttf"
+    size: 86
+
+display:
+  - id: temperature_display
+    platform: ili9xxx
+    model: ST7789V
+    #TTGO TDisplay 135x240
+    dimensions:
+      height: 240
+      width: 135
+      offset_height: 40
+      offset_width: 52
+    cs_pin: GPIO5
+    dc_pin: GPIO16
+    reset_pin: GPIO23
+    rotation: 270°
+    invert_colors: true
+    pages:
+      - lambda: |-
+          it.printf(20, 20, id(l), "1: %.1f°", id(temperature_1).state);
+      - lambda: |-
+          it.printf(20, 20, id(l), "2: %.1f°", id(temperature_2).state);
+      - lambda: |-
+          it.printf(20, 20, id(l), "3: %.1f°", id(temperature_3).state);
+      - lambda: |-
+          it.printf(20, 20, id(l), "4: %.1f°", id(temperature_4).state);
+      - lambda: |-
+          it.printf(20, 20, id(l), "5: %.1f°", id(water_to_gas_heater).state);
+
+interval:
+  - interval: 10s
+    then:
+      - display.page.show_next: temperature_display
+      - component.update: temperature_display
+
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    name: "Display Backlight"
+    id: back_light
+    restore_mode: ALWAYS_ON
 
 logger:
 
