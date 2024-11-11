@@ -16,18 +16,6 @@ spi:
 
 number:
   - platform: template
-    id: fourway_valve_position
-    name: fourway_valve_position
-    initial_value: 0
-    min_value: 0
-    max_value: 100
-    step: 1
-    optimistic: true
-    set_action:
-      then:
-        - script.execute: move_servo_motor
-
-  - platform: template
     id: test_servo_control
     name: Test Servo Control
     min_value: -100
@@ -41,55 +29,17 @@ number:
             id: valve_servo
             level: !lambda 'return x / 100.0;'
 
-script:
-  - id: set_valve_position
-    then:
-      - number.set:
-          id: fourway_valve_position
-          value: !lambda |-
-            float valve_position = (id(control_temp).state - id(bottom_temp).state) / (id(top_temp).state - id(bottom_temp).state);
-            return round(max(0.0, min(100.0, valve_position * 100.0)));
-
-  - id: move_servo_motor
-    then:
-      - servo.write:
-          id: valve_servo
-          level: !lambda |-
-            return (id(fully_closed_at).state - (
-              (id(fourway_valve_position).state / 100.0) * (id(fully_closed_at).state - id(fully_open_at).state)
-            )) / -100.0;
-
 sensor:
   - platform: homeassistant
-    entity_id: input_number.fourway_valve_bottom_temp
-    id: bottom_temp
+    entity_id: sensor.fourway_valve_servo
+    id: valve_servo_value
     on_value:
-      - script.execute: set_valve_position
-      - script.execute: move_servo_motor
+      - servo.write:
+          id: valve_servo
+          level: !lambda 'return x / -100.0;'
   - platform: homeassistant
-    entity_id: input_number.fourway_valve_top_temp
-    id: top_temp
-    on_value:
-      - script.execute: set_valve_position
-      - script.execute: move_servo_motor
-  - platform: homeassistant
-    entity_id: input_number.fourway_valve_control_temp
-    id: control_temp
-    on_value:
-      - script.execute: set_valve_position
-      - script.execute: move_servo_motor
-  - platform: homeassistant
-    entity_id: input_number.fourway_valve_fully_open_at
-    id: fully_open_at
-    on_value:
-      then:
-        script.execute: move_servo_motor
-  - platform: homeassistant
-    entity_id: input_number.fourway_valve_fully_closed_at
-    id: fully_closed_at
-    on_value:
-      then:
-        script.execute: move_servo_motor
+    entity_id: sensor.fourway_valve_position
+    id: valve_position
   - platform: wifi_signal
     name: fourway_valve_wifi_signal
     update_interval: 30s
@@ -145,7 +95,7 @@ output:
 font:
   - id: l
     file: "fonts/BebasNeue-Regular.ttf"
-    size: 80
+    size: 70
 
 display:
   - id: fourway_display
@@ -160,10 +110,10 @@ display:
     cs_pin: GPIO5
     dc_pin: GPIO16
     reset_pin: GPIO23
-    rotation: 90°
+    rotation: 270°
     invert_colors: true
     lambda: |-
-      it.printf(20, 20, id(l), "%.0f%%", id(fourway_valve_position).state);
+      it.printf(20, 20, id(l), "%.0f%%  %.0f", id(valve_position).state, id(valve_servo_value).state);
 
 light:
   - platform: monochromatic
