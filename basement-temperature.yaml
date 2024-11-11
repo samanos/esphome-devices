@@ -10,20 +10,40 @@ wifi:
 web_server:
   port: 80
 
-dallas:
-  - pin: GPIO23
-    update_interval: 30s
+one_wire:
+  - platform: gpio
+    pin: GPIO23
 
 sensor:
-  - platform: dallas
+  - platform: dallas_temp
     address: 0x853C01D0753EEC28
     name: Temperature 1
-  - platform: dallas
+    id: temperature_1
+    update_interval: 30s
+  - platform: dallas_temp
     address: 0xBA3C01D07500BD28
     name: Temperature 2
+    id: temperature_2
+    update_interval: 30s
+  - platform: dallas_temp
+    address: 0x913C01D07573F128
+    name: Temperature 3
+    id: temperature_3
+    update_interval: 30s
+  - platform: dallas_temp
+    address: 0x3B3C01D075164328
+    name: Temperature 4
+    id: temperature_4
+    update_interval: 30s
+  - platform: dallas_temp
+    address: 0xf63ce1d443237728
+    name: Water to Gas Heater
+    id: water_to_gas_heater
+    update_interval: 30s
 
 logger:
 
 api:
 
 ota:
+  platform: esphome
