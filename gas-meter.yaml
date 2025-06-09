@@ -5,9 +5,10 @@ substitutions:
 esphome:
   name: $devicename
   comment: $friendly_name
-  platform: ESP32
-  board: featheresp32
   build_path: .builds/$devicename
+
+esp32:
+  board: featheresp32
 
 wifi:
   ssid: !secret wifi_ssid
@@ -17,66 +18,38 @@ logger:
 
 api:
 
+web_server:
+  port: 80
+
 ota:
-
-globals:
-  - id: total_pulses
-    type: int
-    restore_value: false
-    initial_value: '0'
-  - id: multiplier
-    type: int
-    restore_value: false
-    initial_value: '0'
-
-binary_sensor:
-  - platform: gpio
-    id: internal_pulse_counter
-    pin: GPIO27
-    internal: true
-    filters:
-      - delayed_on: 100ms
-    on_press:
-      then:
-        - lambda: id(total_pulses) += 1;
-        - component.update: my_display
-
-  - platform: gpio
-    pin:
-      number: GPIO0
-      inverted: true
-    internal: true
-    id: tdisplay_button_input_0
-    on_click:
-      then:
-        - lambda: id(multiplier) = (id(multiplier) + 1) % 7;
-  - platform: gpio
-    pin:
-      number: GPIO35
-      inverted: true
-    internal: true
-    id: tdisplay_button_input_1
-    on_click:
-      then:
-        - lambda: !lambda |-
-            if ((int)(id(total_pulses) / pow(10, id(multiplier))) % 10 < 9) {
-              id(total_pulses) += 1 * pow(10, id(multiplier));
-            } else {
-              id(total_pulses) -= 9 * pow(10, id(multiplier));
-            }
-        - component.update: my_display
+  platform: esphome
 
 sensor:
-  - platform: template
-    id: gas_used
-    name: "Gas used"
-    device_class: gas
-    unit_of_measurement: "m³"
-    state_class: "total_increasing"
-    icon: "mdi:fire"
-    accuracy_decimals: 2
-    lambda: |-
-        return id(total_pulses) * 0.01;
+  - platform: homeassistant
+    entity_id: sensor.duju_skaitliukas
+    id: gas_meter
+    name: gas_meter
+
+  - platform: qmc5883l
+    address: 0x0D
+    field_strength_x:
+      name: "Gas Meter Field Strength X"
+    field_strength_y:
+      name: "Gas Meter Field Strength Y"
+    field_strength_z:
+      name: "Gas Meter Field Strength Z"
+    temperature:
+      name: "Gas Meter Temperature"
+      filters:
+        - offset: 34.0
+    range: 200uT
+    oversampling: 512x
+    update_interval: 1s
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
 
 spi:
   clk_pin: GPIO18
@@ -101,7 +74,7 @@ display:
     cs_pin: GPIO5
     dc_pin: GPIO16
     reset_pin: GPIO23
-    rotation: 90°
+    rotation: 270°
     update_interval: 5s
     lambda: |-
-      it.printf(it.get_width(), 0, id(l), TextAlign::TOP_RIGHT, "%08.2f", id(total_pulses) * 0.01);
+      it.printf(it.get_width(), 0, id(l), TextAlign::TOP_RIGHT, "%08.2f", id(gas_meter).state);

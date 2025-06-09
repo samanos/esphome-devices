@@ -1,6 +1,7 @@
 esphome:
   name: fourway-valve-control
-  platform: ESP32
+
+esp32:
   board: featheresp32
 
 wifi:
@@ -27,7 +28,7 @@ number:
       then:
         - servo.write:
             id: valve_servo
-            level: !lambda 'return x / 100.0;'
+            level: !lambda 'return x / -100.0;'
 
 sensor:
   - platform: homeassistant
@@ -48,7 +49,7 @@ servo:
   - id: valve_servo
     output: servo_pwm
     auto_detach_time: 2s
-    transition_length: 5s
+    transition_length: 20s
     min_level: 2.5%
     idle_level: 7.5%
     max_level: 12.5%
@@ -121,6 +122,10 @@ light:
     name: "Display Backlight"
     id: back_light
     restore_mode: ALWAYS_ON
+
+switch:
+  - platform: restart
+    name: Fourway Valve Control Restart
 
 logger:
 

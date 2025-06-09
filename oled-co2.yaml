@@ -1,0 +1,124 @@
+esphome:
+  name: slingshot
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+web_server:
+  port: 80
+
+spi:
+  id: quad_spi
+  type: quad
+  clk_pin: 47
+  data_pins: [18, 7, 48, 5]
+
+i2c:
+  sda: 3
+  scl: 2
+
+touchscreen:
+  - platform: cst816
+    id: my_touchscreen
+    interrupt_pin:
+      number: 21
+    transform:
+      mirror_x: true
+      swap_xy: true
+    on_touch:
+      - display.page.show_next: my_display
+
+color:
+  - id: my_black
+    red: 0%
+    green: 0%
+    blue: 0%
+  - id: my_red
+    hex: fc0000
+  - id: my_green
+    hex: 00fc4c
+  - id: my_yellow
+    hex: e0e637
+  - id: my_orange
+    hex: ff7728
+  - id: my_white
+    hex: ffffff
+
+font:
+  - file: 'fonts/BebasNeue-Regular.ttf'
+    id: font1
+    size: 144
+  - file: 'fonts/BebasNeue-Regular.ttf'
+    id: font2
+    size: 45
+
+graph:
+  - id: blood_glucose_graph
+    duration: 2h
+    x_grid: 15min
+    y_grid: 50.0
+    max_value: 400
+    min_value: 50
+    width: 500
+    height: 200
+    traces:
+      - sensor: blood_sugar
+        line_type: SOLID
+        continuous: true
+        line_thickness: 3
+        color: my_green
+
+display:
+  - platform: qspi_dbi
+    id: my_display
+    model: RM67162
+    dimensions:
+      height: 240
+      width: 536
+      offset_height: 0
+      offset_width: 0
+    transform:
+      mirror_x: true
+      mirror_y: false
+      swap_xy: true
+    color_order: rgb
+    brightness: 150
+    cs_pin: 6
+    reset_pin: 17
+    enable_pin: 38
+    pages:
+      - id: page1
+        lambda: |-
+          it.filled_rectangle(0, 0, 536, 240, my_black);
+          it.printf(268, 100, id(font1), id(my_yellow), TextAlign::CENTER, "%.0f", 123);
+      - id: page2
+        lambda: |-
+          it.printf(268, 100, id(font1), id(my_yellow), TextAlign::CENTER, "%.0f", 456);
+
+psram:
+  mode: octal
+
+sensor:
+  - platform: homeassistant
+    id: blood_sugar
+    entity_id: sensor.blood_sugar
+    accuracy_decimals: 0
+    unit_of_measurement: mg/dL
+
+  - platform: wifi_signal
+    name: ${disp_name} WiFi Status
+    update_interval: 10s
+
+logger:
+
+api:
+
+ota:
+  platform: esphome
