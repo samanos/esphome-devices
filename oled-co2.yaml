@@ -1,5 +1,11 @@
+substitutions:
+  disp_name: Slingshot
+
 esphome:
-  name: slingshot
+  name: slingshot_air_quality
+  platformio_options:
+    build_unflags: -Werror=all
+    board_build.flash_mode: dio
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -15,25 +21,19 @@ web_server:
   port: 80
 
 spi:
-  id: quad_spi
+  id: qspi_bus
   type: quad
-  clk_pin: 47
-  data_pins: [18, 7, 48, 5]
+  clk_pin: GPIO47
+  data_pins:
+    - GPIO18
+    - GPIO7
+    - GPIO48
+    - GPIO5
 
 i2c:
-  sda: 3
-  scl: 2
-
-touchscreen:
-  - platform: cst816
-    id: my_touchscreen
-    interrupt_pin:
-      number: 21
-    transform:
-      mirror_x: true
-      swap_xy: true
-    on_touch:
-      - display.page.show_next: my_display
+  sda: GPIO14
+  scl: GPIO13
+  scan: True
 
 color:
   - id: my_black
@@ -60,7 +60,7 @@ font:
     size: 45
 
 graph:
-  - id: blood_glucose_graph
+  - id: my_graph
     duration: 2h
     x_grid: 15min
     y_grid: 50.0
@@ -69,7 +69,7 @@ graph:
     width: 500
     height: 200
     traces:
-      - sensor: blood_sugar
+      - sensor: my_wifi_signal
         line_type: SOLID
         continuous: true
         line_thickness: 3
@@ -100,21 +100,30 @@ display:
           it.printf(268, 100, id(font1), id(my_yellow), TextAlign::CENTER, "%.0f", 123);
       - id: page2
         lambda: |-
-          it.printf(268, 100, id(font1), id(my_yellow), TextAlign::CENTER, "%.0f", 456);
+          it.graph(10, 20, id(my_graph), my_yellow);
 
 psram:
   mode: octal
 
 sensor:
-  - platform: homeassistant
-    id: blood_sugar
-    entity_id: sensor.blood_sugar
-    accuracy_decimals: 0
-    unit_of_measurement: mg/dL
-
   - platform: wifi_signal
+    id: my_wifi_signal
     name: ${disp_name} WiFi Status
     update_interval: 10s
+
+  - platform: scd4x
+    co2:
+      name: "${disp_name} CO2"
+    temperature:
+      name: "${disp_name} Temperature"
+    humidity:
+      name: "${disp_name} Humidity"
+
+interval:
+  - interval: 10s
+    then:
+      - display.page.show_next: my_display
+      - component.update: my_display
 
 logger:
 
