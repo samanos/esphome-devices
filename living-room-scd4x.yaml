@@ -19,6 +19,7 @@ i2c:
   scan: True
 
 sensor:
+
   - platform: scd4x
     co2:
       name: "Living Room CO2 scd4x"
@@ -32,6 +33,7 @@ sensor:
       name: "Living Room Humidity scd4x"
       filters:
         - median
+
   - platform: bme280_i2c
     temperature:
       name: "Living Room Temperature bme280"
@@ -46,6 +48,10 @@ sensor:
       filters:
         - median
     address: 0x76
+    update_interval: 60s
+
+  - platform: wifi_signal
+    name: "Living Room WiFi Signal"
     update_interval: 60s
 
 switch:
