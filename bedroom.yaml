@@ -1,7 +1,10 @@
 esphome:
-  name: office
-  platform: ESP32
+  name: bedroom
+
+esp32:
   board: nodemcu-32s
+  framework:
+    type: esp-idf
 
 wifi:
   ssid: !secret wifi_ssid
@@ -19,10 +22,16 @@ sensor:
   - platform: scd4x
     co2:
       name: "Bedroom CO2"
+      filters:
+        - median
     temperature:
       name: "Bedroom Temperature"
+      filters:
+        - median
     humidity:
       name: "Bedroom Humidity"
+      filters:
+        - median
 
 switch:
   - platform: restart
@@ -32,3 +41,4 @@ logger:
 api:
 
 ota:
+  platform: esphome
