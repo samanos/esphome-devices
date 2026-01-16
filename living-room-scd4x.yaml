@@ -1,0 +1,60 @@
+esphome:
+  name: living-room
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+web_server:
+  port: 80
+
+i2c:
+  sda: GPIO33
+  scl: GPIO32
+  scan: True
+
+sensor:
+  - platform: scd4x
+    co2:
+      name: "Living Room CO2 scd4x"
+      filters:
+        - median
+    temperature:
+      name: "Living Room Temperature scd4x"
+      filters:
+        - median
+    humidity:
+      name: "Living Room Humidity scd4x"
+      filters:
+        - median
+  - platform: bme280_i2c
+    temperature:
+      name: "Living Room Temperature bme280"
+      filters:
+        - median
+    pressure:
+      name: "Living Room Pressure bme280"
+      filters:
+        - median
+    humidity:
+      name: "Living Room Humidity bme280"
+      filters:
+        - median
+    address: 0x76
+    update_interval: 60s
+
+switch:
+  - platform: restart
+    name: "Living Room Restart"
+
+logger:
+
+api:
+
+ota:
+  platform: esphome
