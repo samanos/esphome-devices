@@ -22,29 +22,29 @@ sensor:
 
   - platform: scd4x
     co2:
-      name: "Living Room CO2 scd4x"
+      name: "CO2 scd4x"
       filters:
         - median
     temperature:
-      name: "Living Room Temperature scd4x"
+      name: "Temperature scd4x"
       filters:
         - median
     humidity:
-      name: "Living Room Humidity scd4x"
+      name: "Humidity scd4x"
       filters:
         - median
 
   - platform: bme280_i2c
     temperature:
-      name: "Living Room Temperature bme280"
+      name: "Temperature bme280"
       filters:
         - median
     pressure:
-      name: "Living Room Pressure bme280"
+      name: "Pressure bme280"
       filters:
         - median
     humidity:
-      name: "Living Room Humidity bme280"
+      name: "Humidity bme280"
       filters:
         - median
     address: 0x76
